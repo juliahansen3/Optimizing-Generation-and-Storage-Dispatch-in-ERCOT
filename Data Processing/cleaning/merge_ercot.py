@@ -1,4 +1,9 @@
-"""Build the August 4–10, 2025 ERCOT fleet. Requires Python 3.10+ and pandas."""
+"""Build the August 4–10, 2025 ERCOT fleet. Requires Python 3.10+ and pandas.
+
+Each output row gets a short, stable `id`:
+  generators: <FUEL>_<first plant code>, e.g. NGCC_3559, SOLAR_65661
+  batteries:  BAT_<plant code>_<n>, n numbered within the plant, e.g. BAT_56961_1
+"""
 import argparse
 from pathlib import Path
 
@@ -13,6 +18,9 @@ FUEL = {"SUN": "Solar", "WND": "Wind", "WAT": "Hydro", "NUC": "Nuclear",
         "LIG": "Coal", "SUB": "Coal"}
 GAS = {**dict.fromkeys(["CA", "CT", "CS"], "Natural Gas - Combined Cycle"),
        **dict.fromkeys(["GT", "IC", "ST"], "Natural Gas - Non-Combined Cycle")}
+FUEL_CODE = {"Natural Gas - Combined Cycle": "NGCC", "Natural Gas - Non-Combined Cycle": "NGCT",
+             "Coal": "COAL", "Nuclear": "NUC", "Wind": "WIND", "Solar": "SOLAR", "Hydro": "HYDRO"}
+DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 
 
 def read_eia(path, columns):
@@ -69,7 +77,17 @@ def build(input_dir, output_dir, values_path):
         **{col: (col, "sum") for col in CAPACITY},
         "Generator Count": ("Generator ID", "size"),
     })
-    grouped = grouped[["Plant Code", *LOCATION, "Energy Source", *CAPACITY, "Generator Count"]]
+    grouped["id"] = (grouped["Energy Source"].map(FUEL_CODE) + "_"
+                     + grouped["Plant Code"].str.split("|").str[0])
+    grouped = grouped[["id", "Plant Code", *LOCATION, "Energy Source", *CAPACITY,
+                       "Generator Count"]]
+
+    batteries = batteries.sort_values(KEY, key=lambda s: s.map(int) if s.name == "Plant Code" else s)
+    batteries.insert(0, "id", "BAT_" + batteries["Plant Code"] + "_"
+                     + (batteries.groupby("Plant Code").cumcount() + 1).astype(str))
+    for name, df in [("generator", grouped), ("battery", batteries)]:
+        if df["id"].isna().any() or df["id"].duplicated().any():
+            raise ValueError(f"Missing or duplicate {name} id")
 
     # Optional chart lookup. The screenshot supplies no unit for 'value'.
     if values_path:
@@ -80,16 +98,16 @@ def build(input_dir, output_dir, values_path):
             raise ValueError("Missing chart value for a generator category")
 
     output_dir.mkdir(parents=True, exist_ok=True)
-    grouped.to_csv(output_dir / "ERCOT_generators_2025-08-04.csv", index=False)
-    batteries[KEY + LOCATION + STORAGE].to_csv(
-        output_dir / "ERCOT_energy_storage_2025-08-04.csv", index=False)
+    grouped.to_csv(output_dir / "generators_2025-08-04.csv", index=False)
+    batteries[["id", *KEY, *LOCATION, *STORAGE]].to_csv(
+        output_dir / "energy_storage_2025_08_04.csv", index=False)
     print(f"{len(gen)} generators in {len(grouped)} groups; {len(batteries)} batteries")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--input-dir", type=Path, default=Path("."))
-    parser.add_argument("--output-dir", type=Path, default=Path("cleaned"))
+    parser.add_argument("--input-dir", type=Path, default=DATA_DIR)
+    parser.add_argument("--output-dir", type=Path, default=DATA_DIR / "cleaned_data")
     parser.add_argument("--values", type=Path, help="Optional energy_source_values.csv")
     args = parser.parse_args()
     build(args.input_dir, args.output_dir, args.values)
