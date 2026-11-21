@@ -6,7 +6,7 @@ import pandas as pd
 
 KEY = ["Plant Code", "Generator ID"]
 LOCATION = ["Latitude", "Longitude"]
-CAPACITY = ["Summer Capacity (MW)", "Winter Capacity (MW)"]
+CAPACITY = ["Nameplate Capacity (MW)", "Summer Capacity (MW)", "Winter Capacity (MW)"]
 STORAGE = ["Nameplate Energy Capacity (MWh)", "Maximum Charge Rate (MW)",
            "Maximum Discharge Rate (MW)"]
 FUEL = {"SUN": "Solar", "WND": "Wind", "WAT": "Hydro", "NUC": "Nuclear",
