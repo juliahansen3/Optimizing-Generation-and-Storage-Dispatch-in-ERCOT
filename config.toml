@@ -42,3 +42,17 @@
 [reference.fuel_cost_per_mwh]     # $/MWh (2025)
 "Nuclear" = 10.14
 "Hydro"   = 9.62
+
+
+# ---- Distance-based transmission cost ---------------------------------------
+# cost(g, z) [$/MWh] = marginal_cost[g] + alpha * distance(g, z) [km]
+# alpha = (avg loss / d_bar) * P_ref
+#   avg loss = 0.020439  (ERCOT ACTUAL_TLF, mean of Aug 4-10 2025, transmission_loss.xlsx)
+#   d_bar    = 381.6 km  (mean of cleaned_data/distance_generator_zone.csv, weighted by
+#                         generator summer capacity x zone load share, Aug 4-10)
+#   P_ref    = 22.8306   (NG combined cycle, the usual marginal unit replacing losses)
+[transmission]
+avg_loss_factor   = 0.020439
+avg_distance_km   = 381.6
+p_ref             = 22.8306   # $/MWh
+alpha             = 0.001223  # $/MWh per km
