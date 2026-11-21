@@ -1,0 +1,44 @@
+# =============================================================================
+# Marginal generation costs for ERCOT dispatch optimization
+# =============================================================================
+# Keys under [marginal_cost] match the "Energy Source" column in
+# Data Processing/Data/cleaned_data/generators_2025-08-04.csv exactly.
+#
+# Cost formula (thermal units):
+#   cost ($/MWh) = fuel price ($/MMBtu) * heat rate (MMBtu/MWh) + variable O&M ($/MWh)
+# Nuclear and hydro fuel costs are already given in $/MWh, so:
+#   cost ($/MWh) = fuel cost ($/MWh) + variable O&M ($/MWh)
+# =============================================================================
+
+# ---- Lookup table used by the optimization (units: $/MWh) -------------------
+[marginal_cost]
+"Wind"                            = 0.0
+"Solar"                           = 0.0
+"Nuclear"                         = 12.76     # 10.14 + 2.62
+"Hydro"                           = 15.14     # 9.62 + 5.52
+"Natural Gas - Combined Cycle"    = 22.8306   # 3.10 * 6.226  + 3.53
+"Natural Gas - Non-Combined Cycle" = 33.88295 # 3.10 * 9.2945 + 5.07 (combustion turbine)
+"Coal"                            = 31.35809  # 2.47 * 10.647 + 5.06
+
+
+# ---- Reference inputs (not used directly; kept for recalculation) -----------
+
+[reference.variable_om]   # $/MWh
+"Nuclear"                          = 2.62
+"Natural Gas - Combined Cycle"     = 3.53   # avg of 3.49 and 3.57
+"Natural Gas - Non-Combined Cycle" = 5.07   # combustion turbine; avg of 5.97 and 4.17
+"Coal"                             = 5.06   # 2022
+"Hydro"                            = 5.52
+
+[reference.heat_rate]     # MMBtu/MWh
+"Natural Gas - Combined Cycle"     = 6.226
+"Natural Gas - Non-Combined Cycle" = 9.2945  # combustion turbine
+"Coal"                             = 10.647  # 2024
+
+[reference.fuel_price_per_mmbtu]  # $/MMBtu
+"Coal"        = 2.47
+"Natural Gas" = 3.10
+
+[reference.fuel_cost_per_mwh]     # $/MWh (2025)
+"Nuclear" = 10.14
+"Hydro"   = 9.62
