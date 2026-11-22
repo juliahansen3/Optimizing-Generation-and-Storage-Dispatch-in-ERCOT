@@ -1,2 +1,8 @@
-﻿Wind,Solar,Nuclear,Hydro,Natural_gas_combined,Natural_gas_noncombined,Coal,# in $/MWh
-0,0,12.76,15.14,22.8306,33.88295,31.35809,
+energy_source,marginal_cost_usd_per_mwh
+Hydro,15.14
+Solar,0
+Wind,0
+Nuclear,12.76
+Coal,31.35809
+Natural Gas - Combined Cycle,22.8306
+Natural Gas - Non-Combined Cycle,33.88295
